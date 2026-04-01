@@ -1,6 +1,9 @@
 import pygame
 import sys
+import time
+import random 
 
+stime=pygame.time.get_ticks()
 screen=pygame.display.set_mode(size=(450,450))
 pygame.display.set_caption('Flappy Bird')
 bg=pygame.image.load('PyGame/Flappy Bird/Images/Background.png')
@@ -64,17 +67,43 @@ class player(pygame.sprite.Sprite):
                 ang=10
             else:ang=-10
             self.image=pygame.transform.rotate(self.image,angle=ang)
-                 
+
+class pipe(pygame.sprite.Sprite):
+    def __init__(self,x,y,position):
+        super().__init__()
+        pipe=pygame.image.load('PyGame/Flappy Bird/Images/Pipe.png')
+        self.image=pipe
+        self.rect=self.image.get_rect()
+        if position==0:
+            self.rect.center=(x,y)
+        else:
+            self.image=pygame.transform.flip(self.image, False, True)
+            self.rect.center=(x,y)
+    def update(self):
+        self.rect.x-=3
+
 players=player(50,175)
 sprite=pygame.sprite.Group()
 sprite.add(players)
+pipeg=pygame.sprite.Group()
 fps=pygame.time.Clock()
+
 while True:
     fps.tick(60.0)
     draw()
     ground_movement()
     sprite.draw(screen)
     sprite.update()
+    ctime=pygame.time.get_ticks()
+    if ctime-stime>=1500:
+        upy=random.randint(-100,100)
+        vpipes=pipe(500,-200+upy,position=1)
+        upipes=pipe(500,500+upy,position=0)
+        pipeg.add(vpipes)
+        pipeg.add(upipes)
+        stime=ctime
+    pipeg.draw(screen)
+    pipeg.update()
     pygame.display.update()
     for event in pygame.event.get():
         if event.type==pygame.MOUSEBUTTONDOWN:
