@@ -10,6 +10,7 @@ bg=pygame.image.load('PyGame/Flappy Bird/Images/Background.png')
 background=pygame.transform.scale(bg,(450,450))
 ground=pygame.image.load('PyGame/Flappy Bird/Images/Ground.png')
 
+gameover=False
 ground_x=0
 move=False
 gmove=True
@@ -42,31 +43,31 @@ class player(pygame.sprite.Sprite):
         self.velocity=0
     def update(self):
         global gmove
-        global animate
-        if animate==True:
+        global gameover
+
+            
+        if move==True:
+            self.velocity+=0.5
+            if self.velocity>5:
+                self.velocity=5
+            if self.rect.y<335:
+                self.rect.y+=self.velocity
+            
+        if gameover==False:
             if self.num < 2:
                 self.num=self.num+1
             else:
                 self.num=0
             self.image=self.images[self.num]
-        if move==True:
             ang=0
-           
-            self.velocity+=0.5
-            if self.velocity>5:
-                self.velocity=5
-            if self.rect.y<335 and self.rect.y>0:
-                self.rect.y+=self.velocity
-            elif self.rect.y>335 or self.rect.y<0:
-                gmove=False
-                animate=False
-                self.image=pygame.transform.rotate(self.image,angle=90)
             pressedkeys=pygame.key.get_pressed()
             if pressedkeys[pygame.K_SPACE]:
                 self.velocity=-7
                 ang=10
             else:ang=-10
             self.image=pygame.transform.rotate(self.image,angle=ang)
+        if gameover==True:
+            self.image=pygame.transform.rotate(self.image,angle=-90)
 
 class pipe(pygame.sprite.Sprite):
     def __init__(self,x,y,position):
@@ -75,10 +76,10 @@ class pipe(pygame.sprite.Sprite):
         self.image=pipe
         self.rect=self.image.get_rect()
         if position==0:
-            self.rect.center=(x,y)
+            self.rect.topleft=(x,y+70)
         else:
             self.image=pygame.transform.flip(self.image, False, True)
-            self.rect.center=(x,y)
+            self.rect.bottomleft=(x,y-70)
     def update(self):
         self.rect.x-=3
 
@@ -95,19 +96,26 @@ while True:
     sprite.draw(screen)
     sprite.update()
     ctime=pygame.time.get_ticks()
-    if ctime-stime>=1500:
-        upy=random.randint(-100,100)
-        vpipes=pipe(500,-200+upy,position=1)
-        upipes=pipe(500,500+upy,position=0)
-        pipeg.add(vpipes)
-        pipeg.add(upipes)
-        stime=ctime
+
+    if gameover==False and move==True:
+        if ctime-stime>=1500:
+            upy=random.randint(-100,100)
+            vpipes=pipe(500,200+upy,position=1)
+            upipes=pipe(500,200+upy,position=0)
+            pipeg.add(vpipes)
+            pipeg.add(upipes)
+            stime=ctime
     pipeg.draw(screen)
     pipeg.update()
     pygame.display.update()
+    if pygame.sprite.groupcollide(sprite,pipeg,False,False) or players.rect.top<0:
+        gameover=True
+        gmove=False
+        move=False
     for event in pygame.event.get():
-        if event.type==pygame.MOUSEBUTTONDOWN:
+        if event.type==pygame.MOUSEBUTTONDOWN and gameover==False:
             move=True
+
         if event.type==pygame.QUIT:
             pygame.quit()
             sys.exit()
