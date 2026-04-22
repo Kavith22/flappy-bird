@@ -1,6 +1,5 @@
 import pygame
 import sys
-import time
 import random 
 
 stime=pygame.time.get_ticks()
@@ -15,10 +14,10 @@ ground_x=0
 move=False
 gmove=True
 animate=True
+
 def draw():
     screen.blit(background,(0,0))
     screen.blit(ground,(ground_x,370))
-
 def ground_movement():
     global ground_x
     global gmove
@@ -28,6 +27,19 @@ def ground_movement():
             ground_x=0
 
 images=['PyGame/Flappy Bird/Images/Normal.png', 'PyGame/Flappy Bird/Images/Flat.png','PyGame/Flappy Bird/Images/Down.png']
+class restartbutton(pygame.sprite.Sprite):
+    def __init__(self,x,y):
+        restart=pygame.image.load('PyGame/Flappy Bird/Images/Restart.png')
+        self.image=restart
+        self.rect=self.image.get_rect()
+        self.rect.center=(x,y)
+    def draw(self):
+        screen.blit(self.image,(self.rect.x,self.rect.y))
+        pos=pygame.mouse.get_pos()
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0]==1:
+                restarting()
+
 class player(pygame.sprite.Sprite):
     def __init__(self,x,y):
         super().__init__()
@@ -60,14 +72,13 @@ class player(pygame.sprite.Sprite):
                 self.num=0
             self.image=self.images[self.num]
             ang=0
-            pressedkeys=pygame.key.get_pressed()
-            if pressedkeys[pygame.K_SPACE]:
+            
+            if pygame.mouse.get_pressed()[0]==1:
                 self.velocity=-7
-                ang=10
-            else:ang=-10
-            self.image=pygame.transform.rotate(self.image,angle=ang)
+            self.image=pygame.transform.rotate(self.image,angle=-(self.velocity*2))
         if gameover==True:
             self.image=pygame.transform.rotate(self.image,angle=-90)
+
 
 class pipe(pygame.sprite.Sprite):
     def __init__(self,x,y,position):
@@ -83,11 +94,26 @@ class pipe(pygame.sprite.Sprite):
     def update(self):
         self.rect.x-=3
 
+def restarting():
+    global move
+    global gameover
+    global gmove
+    global animate
+
+    move=False
+    gameover=False
+    animate=True
+    gmove=True
+    players.rect.x = 50
+    players.rect.y = 175
+    pipeg.empty()
+
 players=player(50,175)
 sprite=pygame.sprite.Group()
 sprite.add(players)
 pipeg=pygame.sprite.Group()
 fps=pygame.time.Clock()
+button=restartbutton(225,195)
 
 while True:
     fps.tick(60.0)
@@ -95,8 +121,9 @@ while True:
     ground_movement()
     sprite.draw(screen)
     sprite.update()
+    pipeg.draw(screen)
     ctime=pygame.time.get_ticks()
-
+    
     if gameover==False and move==True:
         if ctime-stime>=1500:
             upy=random.randint(-100,100)
@@ -105,17 +132,17 @@ while True:
             pipeg.add(vpipes)
             pipeg.add(upipes)
             stime=ctime
-    pipeg.draw(screen)
-    pipeg.update()
-    pygame.display.update()
+        pipeg.update()
+    
     if pygame.sprite.groupcollide(sprite,pipeg,False,False) or players.rect.top<0:
         gameover=True
         gmove=False
-        move=False
+        button.draw()
+    
     for event in pygame.event.get():
         if event.type==pygame.MOUSEBUTTONDOWN and gameover==False:
             move=True
-
         if event.type==pygame.QUIT:
             pygame.quit()
             sys.exit()
+    pygame.display.update()
