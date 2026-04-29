@@ -1,23 +1,25 @@
 import pygame
 import sys
 import random 
-
+pygame.font.init()
 stime=pygame.time.get_ticks()
 screen=pygame.display.set_mode(size=(450,450))
 pygame.display.set_caption('Flappy Bird')
 bg=pygame.image.load('PyGame/Flappy Bird/Images/Background.png')
 background=pygame.transform.scale(bg,(450,450))
 ground=pygame.image.load('PyGame/Flappy Bird/Images/Ground.png')
-
+passed=False
 gameover=False
 ground_x=0
 move=False
 gmove=True
 animate=True
-
+score=0
+font=pygame.font.SysFont('impact',50)
 def draw():
     screen.blit(background,(0,0))
     screen.blit(ground,(ground_x,370))
+    
 def ground_movement():
     global ground_x
     global gmove
@@ -25,7 +27,6 @@ def ground_movement():
         ground_x-=2
         if ground_x < -250:
             ground_x=0
-
 images=['PyGame/Flappy Bird/Images/Normal.png', 'PyGame/Flappy Bird/Images/Flat.png','PyGame/Flappy Bird/Images/Down.png']
 class restartbutton(pygame.sprite.Sprite):
     def __init__(self,x,y):
@@ -93,17 +94,21 @@ class pipe(pygame.sprite.Sprite):
             self.rect.bottomleft=(x,y-70)
     def update(self):
         self.rect.x-=3
+        if self.rect.x<-50:
+            self.kill()
 
 def restarting():
     global move
     global gameover
     global gmove
     global animate
+    global score
 
     move=False
     gameover=False
     animate=True
     gmove=True
+    score=0
     players.rect.x = 50
     players.rect.y = 175
     pipeg.empty()
@@ -117,13 +122,25 @@ button=restartbutton(225,195)
 
 while True:
     fps.tick(60.0)
+    
     draw()
+    text=font.render(str(score),True,'white')
+    screen.blit(text,(210,30))
     ground_movement()
     sprite.draw(screen)
     sprite.update()
     pipeg.draw(screen)
     ctime=pygame.time.get_ticks()
     
+    
+    if len(pipeg)>0:
+        if sprite.sprites()[0].rect.left > pipeg.sprites()[0].rect.left and sprite.sprites()[0].rect.right < pipeg.sprites()[0].rect.right and passed==False:
+            passed=True
+        if passed == True:
+            if sprite.sprites()[0].rect.left> pipeg.sprites()[0].rect.right:
+                passed=False
+                score=score+1 
+                
     if gameover==False and move==True:
         if ctime-stime>=1500:
             upy=random.randint(-100,100)
